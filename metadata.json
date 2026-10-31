@@ -1,0 +1,6 @@
+{
+  "name": "ASCON INTELLIGENCE",
+  "description": "AI-Powered Lightweight Cryptography & Performance Analyzer implementing NIST SP 800-232 ASCON-Hash256 and ASCON-XOF128 with telemetry benchmarks and Gemma 4 AI analysis.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

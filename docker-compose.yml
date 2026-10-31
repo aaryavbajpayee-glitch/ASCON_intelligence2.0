@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  ascon-intelligence:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ascon-intelligence-prod
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOST=0.0.0.0
+      - CLUSTER_MODE=false # Set to true for multi-worker core clustering
+      - WEB_CONCURRENCY=2
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-flash}
+      - DATABASE_INTEGRITY_KEY=${DATABASE_INTEGRITY_KEY:-ascon-nist-sp-800-232-vault-key-2026}
+    volumes:
+      - ascon_vault_data:/app/data
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1024M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/health').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  ascon_vault_data:
+    driver: local
