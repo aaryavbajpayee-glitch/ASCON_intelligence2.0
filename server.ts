@@ -586,6 +586,27 @@ Hackers sometimes try to steal passwords by measuring the exact electricity a ch
       appType: 'spa',
     });
     app.use(vite.middlewares);
+
+    // SPA fallback in development mode
+    app.get('*', async (req, res, next) => {
+      // Don't intercept API routes
+      if (req.path.startsWith('/api')) {
+        return next();
+      }
+      try {
+        const url = req.originalUrl;
+        const indexPath = path.resolve(process.cwd(), 'index.html');
+        if (fs.existsSync(indexPath)) {
+          let template = fs.readFileSync(indexPath, 'utf-8');
+          template = await vite.transformIndexHtml(url, template);
+          res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
+        } else {
+          next();
+        }
+      } catch (err) {
+        next(err);
+      }
+    });
   } else {
     const distPath = getDistPath();
     app.use(
@@ -594,7 +615,10 @@ Hackers sometimes try to steal passwords by measuring the exact electricity a ch
         etag: true,
       })
     );
-    app.get('*', (_req, res) => {
+    app.get('*', (req, res, next) => {
+      if (req.path.startsWith('/api')) {
+        return next();
+      }
       res.sendFile(path.resolve(distPath, 'index.html'));
     });
   }
