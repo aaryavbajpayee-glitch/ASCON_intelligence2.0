@@ -13,6 +13,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 // Direct robust imports: Guarantees 0ms slide transitions and immunity from dynamic import fetch errors
 import { Dashboard } from './pages/Dashboard';
 import { HashGenerator } from './pages/HashGenerator';
+import { CSVAnalyzer } from './pages/CSVAnalyzer';
 import { Benchmark } from './pages/Benchmark';
 import { Comparison } from './pages/Comparison';
 import { AIAssistant } from './pages/AIAssistant';
@@ -44,6 +45,7 @@ export default function App() {
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/hash-generator" element={<HashGenerator />} />
+                  <Route path="/csv-analyzer" element={<CSVAnalyzer />} />
                   <Route path="/benchmark" element={<Benchmark />} />
                   <Route path="/comparison" element={<Comparison />} />
                   <Route path="/ai-assistant" element={<AIAssistant />} />

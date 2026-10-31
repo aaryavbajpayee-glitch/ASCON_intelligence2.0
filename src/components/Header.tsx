@@ -20,6 +20,8 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
         return { title: 'Dashboard', sub: 'System Telemetry & Real-Time Performance Matrix' };
       case '/hash-generator':
         return { title: 'Hash Generator', sub: 'ASCON-Hash256 & ASCON-XOF128 Permutation Engine' };
+      case '/csv-analyzer':
+        return { title: 'CSV Data Analyzer', sub: 'Dataset Cryptographic Ingestion & Bulk Verification' };
       case '/benchmark':
         return { title: 'Performance Benchmark', sub: 'Throughput & Micro-benchmarking Suite' };
       case '/comparison':

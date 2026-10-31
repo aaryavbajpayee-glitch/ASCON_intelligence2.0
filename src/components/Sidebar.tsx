@@ -3,6 +3,7 @@ import { NavLink, Link } from 'react-router-dom';
 import {
   LayoutDashboard,
   Binary,
+  FileSpreadsheet,
   Gauge,
   GitCompare,
   Cpu,
@@ -39,6 +40,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       icon: Binary,
       badge: 'NIST',
       description: 'ASCON-Hash256 / XOF128',
+    },
+    {
+      to: '/csv-analyzer',
+      label: 'CSV Data Analyzer',
+      icon: FileSpreadsheet,
+      badge: 'NEW',
+      description: 'Bulk CSV hashing & verification',
     },
     {
       to: '/benchmark',
