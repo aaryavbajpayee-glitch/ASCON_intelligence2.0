@@ -11,6 +11,7 @@ import { vaultDb } from './db';
 import { createRateLimiter } from './server/rateLimiter';
 import { nativeCompression } from './server/compression';
 import { telemetry } from './server/telemetry';
+import { generateGemmaResponse } from './server/aiReasoner';
 
 dotenv.config();
 if (fs.existsSync('.env.local')) {
@@ -225,7 +226,7 @@ COMMUNICATION PRINCIPLES:
           contents: [{ role: 'user', parts: [{ text: prompt }] }],
           config: {
             systemInstruction,
-            temperature: 0.2,
+            temperature: 0.7,
           },
         });
 
@@ -389,105 +390,8 @@ COMMUNICATION PRINCIPLES:
       const reply = await callGenAIWithFallback(fullPrompt, GEMMA_SYSTEM_INSTRUCTION);
       res.json({ reply });
     } catch (error: any) {
-      let reply = `### 💡 Gemma 4 Cryptography Assistant (Plain English Explanation)\n\n`;
-
-      // CSV Dataset Intelligence Handler
-      if (contextData?.feature === 'CSV Data Analyzer' && contextData?.dataset) {
-        const ds = contextData.dataset;
-        const perf = contextData.performance;
-        const ver = contextData.verification;
-
-        if (message.toLowerCase().includes('summarize') || message.toLowerCase().includes('dataset')) {
-          reply += `**📋 Plain-Language CSV Dataset Summary:**\n`;
-          reply += `- **Dataset File:** \`${ds.fileName || 'Uploaded CSV'}\`\n`;
-          reply += `- **Dimensions:** **${ds.rowCount} rows** across **${ds.columnCount} columns** (\`${ds.columns.slice(0, 5).join(', ')}${ds.columns.length > 5 ? '...' : ''}\`).\n`;
-          reply += `- **Hashing Scope Selected:** **${ds.scope.toUpperCase()}** (${ds.selectedColumn || 'All columns'}).\n`;
-          if (perf) {
-            reply += `- **Processing Output:** **${perf.totalRecords} records** successfully permuted using **${perf.algorithm}**.\n`;
-            reply += `- **Average Speed:** **${perf.avgLatencyUs} µs per record** at **${perf.throughputMBs} MB/s**.\n`;
-          }
-          reply += `\n*Takeaway:* Every single record has been converted into a unique cryptographic fingerprint while preserving the exact row-level mapping for data integrity auditing.\n`;
-          res.json({ reply });
-          return;
-        } else if (message.toLowerCase().includes('longest') || message.toLowerCase().includes('slowest') || message.toLowerCase().includes('fastest')) {
-          reply += `**⏱️ Latency Distribution & Outlier Analysis:**\n`;
-          if (perf?.slowestRecord && perf?.fastestRecord) {
-            reply += `- **Longest Execution Time:** Record **#${perf.slowestRecord.rec}** took **${perf.slowestRecord.latencyUs} µs**.\n`;
-            reply += `- **Fastest Execution Time:** Record **#${perf.fastestRecord.rec}** took **${perf.fastestRecord.latencyUs} µs**.\n`;
-            reply += `- **Average Latency:** **${perf.avgLatencyUs} µs** across all records.\n\n`;
-            reply += `*Why do times vary slightly?* Longer text strings require more 8-byte blocks absorbed into the 320-bit sponge state, and V8 JIT micro-optimizations stabilize speed as more records are processed.\n`;
-          } else {
-            reply += `All records executed evenly with an average latency of **${perf?.avgLatencyUs || 0} µs**.\n`;
-          }
-          res.json({ reply });
-          return;
-        } else if (message.toLowerCase().includes('performance') || message.toLowerCase().includes('measurements') || message.toLowerCase().includes('speed')) {
-          reply += `**⚡ What Your CSV Performance Numbers Mean in Real Life:**\n`;
-          reply += `- **Average Time:** **${perf?.avgLatencyUs || 0} µs** (${((perf?.avgLatencyUs || 0) / 1000).toFixed(3)} ms). In real-world terms, processing 1,000 records takes less than one-tenth of a second!\n`;
-          reply += `- **Throughput:** **${perf?.throughputMBs || 0} MB per second**. That means an IoT gateway or edge server can continuously sign live telemetry data in real time without buffering lag.\n`;
-          reply += `- **Memory Overhead:** A strict **40 bytes** internal state registers—virtually zero footprint on system RAM.\n`;
-          res.json({ reply });
-          return;
-        } else if (message.toLowerCase().includes('compare') || message.toLowerCase().includes('xof')) {
-          reply += `**🔍 ASCON-Hash256 vs ASCON-XOF128 on This Dataset:**\n`;
-          reply += `1. **ASCON-Hash256 (Fixed 32-Byte Output):** Produces a constant 256-bit digest. It is the gold standard for verifying whether any cell or row in this CSV has been modified, tampered with, or corrupted.\n`;
-          reply += `2. **ASCON-XOF128 (Configurable Output):** An "Extendable-Output Function" allowing you to generate digests from 16 to 128+ bytes. Ideal if you need shorter hashes for low-bandwidth BLE beacons or longer cryptographic keys derived from row data.\n`;
-          reply += `*Both variants share the same ultra-secure 320-bit permutation core with 128-bit classical security.*\n`;
-          res.json({ reply });
-          return;
-        } else if (message.toLowerCase().includes('significance') || message.toLowerCase().includes('hash') || message.toLowerCase().includes('security')) {
-          reply += `**🛡️ Why These Generated Hashes Matter for Your Data:**\n`;
-          reply += `- **Digital Tamper Seal:** If even a single character, decimal place, or space in a row changes, the generated hash completely scrambles (the *avalanche effect*).\n`;
-          reply += `- **Mathematical Proof:** By saving the Combined CSV or Hashed Results CSV, you can independently prove to regulators or auditors that the records were generated at this exact timestamp without alteration.\n`;
-          reply += `- **Collision Resistance:** Finding two different CSV rows that produce the same ASCON digest would require \\(2^{128}\\) computational attempts—impossible even with modern supercomputers.\n`;
-          res.json({ reply });
-          return;
-        } else if (message.toLowerCase().includes('report')) {
-          reply += `## 📋 Formal ASCON Dataset Audit & Ingestion Report\n\n`;
-          reply += `**Target Asset:** \`${ds.fileName || 'Uploaded CSV'}\`\n`;
-          reply += `**Standard:** NIST SP 800-232 Lightweight Cryptosuite\n`;
-          reply += `**Algorithm Applied:** \`${perf?.algorithm || 'ASCON-Hash256'}\`\n\n`;
-          reply += `### Executive Findings:\n`;
-          reply += `1. **Volume:** Successfully ingested **${ds.rowCount} rows** across **${ds.columnCount} columns**.\n`;
-          reply += `2. **Operational Speed:** Processed in **${perf?.totalTimeMs || 0} ms** at an average rate of **${perf?.avgLatencyUs || 0} µs per record** (${perf?.throughputMBs || 0} MB/s).\n`;
-          reply += `3. **Cryptographic Integrity:** Re-verification confirmed 100% deterministic reproducibility across all rows.\n`;
-          reply += `4. **Compliance Status:** Fully compliant with NIST SP 800-232 lightweight specifications for embedded and cloud architectures.\n`;
-          res.json({ reply });
-          return;
-        }
-      }
-
-      if (contextData?.latestBenchmarks?.length) {
-        const b0 = contextData.latestBenchmarks[0];
-        reply += `**⚡ What Your Real Test Numbers Mean:**\n`;
-        reply += `- **Algorithm Tested:** \`${b0.algorithm}\`\n`;
-        reply += `- **How Fast It Ran:** It took an average of **${b0.avgTimeUs} microseconds** (${(b0.avgTimeUs / 1000).toFixed(3)} milliseconds). For a smart device or microcontroller, this is almost instantaneous.\n`;
-        reply += `- **Speed (Throughput):** It processed data at **${b0.throughputMBs} MB per second**, which is fast enough to secure live streaming sensor data with virtually zero delay.\n\n`;
-      }
-
-      if (message.toLowerCase().includes('s-box') || message.toLowerCase().includes('substitution') || message.toLowerCase().includes('side-channel')) {
-        reply += `**🛡️ The Secret to ASCON's Safety (In Simple Terms):**\n`;
-        reply += `Think of an **S-box** like a kitchen blender for data. When you feed it your information, it thoroughly scrambles the bits so no one can guess the original recipe.\n\n`;
-        reply += `1. **No Sneaky Table Lookups:** Unlike older algorithms (like AES) that look up values in memory tables—which hackers can spy on by timing memory lookups—ASCON uses simple direct logic math (\`AND\`, \`XOR\`, \`NOT\`). Every operation takes the exact same amount of time, making it immune to "stopwatch" timing hacks.\n`;
-        reply += `2. **Low Math Complexity (Degree 2):** Because the scrambling math is straightforward, security chips can easily mask the device's electrical power fluctuations. This prevents hackers from reading your secret keys with an oscilloscope.\n`;
-      } else if (message.toLowerCase().includes('arm') || message.toLowerCase().includes('cortex') || message.toLowerCase().includes('risc-v') || message.toLowerCase().includes('c optimization')) {
-        reply += `**🔧 Why Microchips (ARM / RISC-V) Love ASCON:**\n`;
-        reply += `- **Fits in Pocket Memory:** Small microcontrollers have tiny internal memory registers. ASCON's entire workspace is just **40 bytes** (5 words of 64 bits), so it fits right inside the chip's internal scratchpad without needing to constantly save and load from slower RAM.\n`;
-        reply += `- **Single-Step Rotations:** Microchips can spin and rotate numbers in a single clock tick, making ASCON run at blazing speeds with tiny battery draw.\n`;
-        reply += `- **Low Battery Consumption:** Less math and less memory access directly translates to longer battery life for IoT sensors and wearable devices.\n`;
-      } else if (message.toLowerCase().includes('sponge') || message.toLowerCase().includes('how') || message.toLowerCase().includes('work')) {
-        reply += `**🧽 How the ASCON "Sponge" Works:**\n`;
-        reply += `Imagine a sponge in a bucket of water:\n`;
-        reply += `1. **Absorbing (Soaking):** Your input text or file is fed into the sponge in small 8-byte chunks.\n`;
-        reply += `2. **Mixing (Scrambling):** The sponge is shaken and mixed 12 times in a row using mathematical shifts and scrambles until the data is completely unrecognizable.\n`;
-        reply += `3. **Squeezing (Output):** Finally, we gently squeeze the sponge to extract the exact number of bytes needed for your secure digital fingerprint!\n`;
-      } else {
-        reply += `**🎯 Summary & Recommendation:**\n`;
-        reply += `ASCON is the official NIST standard for small, connected gadgets because it offers top-tier security (128-bit security, the same strength used in banking) while requiring a fraction of the memory and power of older tools like SHA-256.\n`;
-        reply += `- Use **ASCON-Hash256** when you need a standard 32-byte tamper-check signature for files or firmware.\n`;
-        reply += `- Use **ASCON-XOF128** when you need to generate flexible security keys of custom lengths on the fly.\n`;
-      }
-
+      // Dynamic, topic-specific cryptographic reasoning engine
+      const reply = generateGemmaResponse(message, contextData);
       res.json({ reply });
     }
   });
